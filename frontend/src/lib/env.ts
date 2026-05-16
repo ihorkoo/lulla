@@ -1,0 +1,27 @@
+import { z } from "zod";
+
+const serverSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  INTERNAL_API_URL: z.string().url().default("http://backend:8000"),
+  JWT_COOKIE_SECRET: z.string().min(32),
+});
+
+const clientSchema = z.object({
+  NEXT_PUBLIC_API_URL: z.string().url(),
+});
+
+const isServer = typeof window === "undefined";
+
+const parsedClient = clientSchema.parse({
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+});
+
+const parsedServer = isServer
+  ? serverSchema.parse({
+      NODE_ENV: process.env.NODE_ENV,
+      INTERNAL_API_URL: process.env.INTERNAL_API_URL,
+      JWT_COOKIE_SECRET: process.env.JWT_COOKIE_SECRET,
+    })
+  : ({} as z.infer<typeof serverSchema>);
+
+export const env = { ...parsedClient, ...parsedServer };

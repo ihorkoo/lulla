@@ -1,0 +1,19 @@
+{
+  "common": {
+    "appName": "lulla",
+    "tagline": "Support for every baby born a little early",
+    "startFree": "Start for free",
+    "login": "Log in",
+    "register": "Sign up",
+    "disclaimer": "Not medical advice — always consult your pediatrician."
+  },
+  "setup": {
+    "title": "Tell us about your baby",
+    "subtitle": "Fill 4 fields — takes 30 seconds.",
+    "parentName": "Your name",
+    "babyName": "Baby's name",
+    "dob": "Date of birth",
+    "ga": "Gestational age (weeks at birth)",
+    "submit": "Start chatting with lulla"
+  }
+}

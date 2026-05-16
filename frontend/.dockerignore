@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.idea
+.vscode
+.DS_Store
+*.log
+coverage
+playwright-report
+test-results
+tests/e2e/reports

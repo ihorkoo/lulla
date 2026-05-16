@@ -1,0 +1,78 @@
+[project]
+name = "lulla-backend"
+version = "0.1.0"
+description = "lulla — Django REST API for premature-baby parent support app"
+requires-python = ">=3.12"
+dependencies = [
+    "django==5.1.3",
+    "djangorestframework==3.15.2",
+    "djangorestframework-simplejwt==5.3.1",
+    "drf-spectacular==0.28.0",
+    "django-cors-headers==4.6.0",
+    "django-environ==0.11.2",
+    "django-redis==5.4.0",
+    "psycopg[binary]==3.2.3",
+    "pgvector==0.3.6",
+    "google-genai>=0.8.0,<2.0.0",
+    "voyageai==0.3.2",
+    "openai==1.57.0",
+    "python-json-logger==2.0.7",
+    "gunicorn==23.0.0",
+    "tenacity==9.0.0",
+    "httpx==0.28.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "pyright>=1.1.390",
+    "django-stubs[compatible-mypy]>=5.1.0",
+    "djangorestframework-stubs>=3.15.0",
+    "pytest>=8.3.0",
+    "pytest-django>=4.9.0",
+    "pytest-cov>=6.0.0",
+    "factory-boy>=3.3.0",
+    "coverage>=7.6.0",
+    "ipython>=8.30.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".git", ".venv", "**/migrations", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "C4", "DJ", "SIM", "RUF", "S"]
+ignore = ["S101", "S104"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"**/migrations/*.py" = ["ALL"]
+"**/tests/**" = ["S101", "S106"]
+"**/settings/*.py" = ["F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "lulla.settings.test"
+python_files = ["test_*.py", "tests.py"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["lulla", "apps"]
+omit = ["*/migrations/*", "*/tests/*", "manage.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lulla", "apps"]
