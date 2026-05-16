@@ -1,8 +1,6 @@
 /** Server-only helpers to talk to Django from Route Handlers / Server Components. */
 import "server-only";
 
-import { env } from "@/lib/env";
-
 import {
   clearAuthCookies,
   readAccessToken,
@@ -10,7 +8,13 @@ import {
   setAuthCookies,
 } from "./cookies";
 
-const INTERNAL = env.INTERNAL_API_URL ?? "https://back-production-af3c.up.railway.app";
+// Backend URL is intentionally hardcoded so it cannot be overridden by a
+// stale/wrong INTERNAL_API_URL env var. For local dev, docker-compose maps
+// localhost:8000 → backend service, so we pick the right value at runtime.
+const INTERNAL =
+  process.env.NODE_ENV === "production"
+    ? "https://back-production-af3c.up.railway.app"
+    : "http://backend:8000";
 
 export interface UpstreamOptions extends RequestInit {
   authorize?: boolean;
