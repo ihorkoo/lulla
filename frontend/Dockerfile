@@ -7,8 +7,7 @@ WORKDIR /app
 # Dev target — hot reload, full deps
 FROM base AS dev
 COPY package.json .npmrc ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prefer-offline --config.confirmModulesPurge=false
+RUN pnpm install --prefer-offline --config.confirmModulesPurge=false
 ENV NODE_ENV=development
 EXPOSE 3000
 CMD ["pnpm", "dev"]
@@ -16,8 +15,7 @@ CMD ["pnpm", "dev"]
 # Build target
 FROM base AS build
 COPY package.json pnpm-lock.yaml* ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --frozen-lockfile || pnpm install
 COPY . .
 RUN pnpm build
 
