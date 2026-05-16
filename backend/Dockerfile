@@ -24,7 +24,7 @@ FROM base AS dev
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
     uv sync --no-install-project
 
 ENV DJANGO_SETTINGS_MODULE=lulla.settings.development \
@@ -37,7 +37,7 @@ CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
 FROM base AS prod
 RUN apt-get update && apt-get install -y --no-install-recommends tini \
     && rm -rf /var/lib/apt/lists/*
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
     uv sync --no-dev --no-install-project
 
 RUN useradd -ms /bin/bash app && chown -R app:app /app
