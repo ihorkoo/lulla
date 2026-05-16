@@ -2,7 +2,10 @@ import { z } from "zod";
 
 const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  INTERNAL_API_URL: z.string().url().default("http://backend:8000"),
+  INTERNAL_API_URL: z
+    .string()
+    .url()
+    .default("https://back-production-af3c.up.railway.app"),
   JWT_COOKIE_SECRET: z.string().min(32).optional(),
 });
 

@@ -10,7 +10,7 @@ import {
   setAuthCookies,
 } from "./cookies";
 
-const INTERNAL = env.INTERNAL_API_URL ?? "http://backend:8000";
+const INTERNAL = env.INTERNAL_API_URL ?? "https://back-production-af3c.up.railway.app";
 
 export interface UpstreamOptions extends RequestInit {
   authorize?: boolean;
