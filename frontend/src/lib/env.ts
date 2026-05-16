@@ -3,11 +3,15 @@ import { z } from "zod";
 const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   INTERNAL_API_URL: z.string().url().default("http://backend:8000"),
-  JWT_COOKIE_SECRET: z.string().min(32),
+  JWT_COOKIE_SECRET: z.string().min(32).optional(),
 });
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.string().url(),
+  NEXT_PUBLIC_API_URL: z
+    .string()
+    .url()
+    .optional()
+    .default("http://localhost:8000"),
 });
 
 const isServer = typeof window === "undefined";
