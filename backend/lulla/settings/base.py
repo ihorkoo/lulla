@@ -8,6 +8,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import environ
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
@@ -16,6 +18,9 @@ def env(key: str, default: str | None = None, *, required: bool = False) -> str:
     if required and value is None:
         raise RuntimeError(f"Required env var {key} is not set")
     return value or ""
+
+
+_env_helper = environ.Env()
 
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", required=True)
@@ -78,17 +83,29 @@ TEMPLATES = [
     },
 ]
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("POSTGRES_DB", "lulla"),
-        "USER": env("POSTGRES_USER", "lulla"),
-        "PASSWORD": env("POSTGRES_PASSWORD", "lulla"),
-        "HOST": env("POSTGRES_HOST", "postgres"),
-        "PORT": env("POSTGRES_PORT", "5432"),
-        "CONN_MAX_AGE": 60,
+_DATABASE_URL = env("DATABASE_URL", "")
+if _DATABASE_URL:
+    # Single-URL form (Railway, Heroku, Fly, etc.). Force the postgresql engine
+    # so we keep psycopg as the driver even if the URL scheme is "postgres://".
+    _parsed_db = _env_helper.db_url_config(_DATABASE_URL)
+    _parsed_db["ENGINE"] = "django.db.backends.postgresql"
+    _parsed_db.setdefault("CONN_MAX_AGE", 60)
+    if env("DATABASE_SSL_REQUIRE", "false").lower() in {"1", "true", "yes"}:
+        _parsed_db.setdefault("OPTIONS", {})
+        _parsed_db["OPTIONS"]["sslmode"] = "require"
+    DATABASES = {"default": _parsed_db}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env("POSTGRES_DB", "lulla"),
+            "USER": env("POSTGRES_USER", "lulla"),
+            "PASSWORD": env("POSTGRES_PASSWORD", "lulla"),
+            "HOST": env("POSTGRES_HOST", "postgres"),
+            "PORT": env("POSTGRES_PORT", "5432"),
+            "CONN_MAX_AGE": 60,
+        }
     }
-}
 
 CACHES = {
     "default": {
