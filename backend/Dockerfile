@@ -40,13 +40,14 @@ RUN uv sync --no-dev --no-install-project
 
 RUN useradd -ms /bin/bash app && chown -R app:app /app
 COPY --chown=app:app . /app
+RUN chmod +x /app/scripts/entrypoint.sh
 USER app
 
 ENV DJANGO_SETTINGS_MODULE=lulla.settings.production \
     PATH="/app/.venv/bin:${PATH}"
 
 EXPOSE 8000
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/app/scripts/entrypoint.sh"]
 CMD ["uv", "run", "gunicorn", "lulla.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "3", \
