@@ -13,7 +13,7 @@ import {
 // localhost:8000 → backend service, so we pick the right value at runtime.
 const INTERNAL =
   process.env.NODE_ENV === "production"
-    ? "https://back-production-af3c.up.railway.app"
+    ? "https://back-production-af3c.up.railway.app:8000"
     : "http://backend:8000";
 
 export interface UpstreamOptions extends RequestInit {
