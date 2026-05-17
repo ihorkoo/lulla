@@ -9,6 +9,11 @@ export interface StreamingState {
   citations: Citation[];
   pendingUserMessage: string | null;
   isStreaming: boolean;
+  // Holds the assistant message id after the backend persists it.
+  // chat-window clears the streaming bubble once it sees this id in the
+  // refetched conversation, which avoids the brief blank window between
+  // `done` and the React Query refetch settling.
+  doneMessageId: string | null;
   error: string | null;
 }
 
@@ -37,14 +42,17 @@ function parseSseLines(buffer: string): Array<{ event: string; data: unknown }> 
   return events;
 }
 
+const INITIAL_STATE: StreamingState = {
+  assistantText: "",
+  citations: [],
+  pendingUserMessage: null,
+  isStreaming: false,
+  doneMessageId: null,
+  error: null,
+};
+
 export function useChatStream(conversationId: string, handlers: StreamHandlers) {
-  const [state, setState] = useState<StreamingState>({
-    assistantText: "",
-    citations: [],
-    pendingUserMessage: null,
-    isStreaming: false,
-    error: null,
-  });
+  const [state, setState] = useState<StreamingState>(INITIAL_STATE);
   const bufferRef = useRef("");
 
   function applyEvents(events: Array<{ event: string; data: unknown }>) {
@@ -56,14 +64,9 @@ export function useChatStream(conversationId: string, handlers: StreamHandlers) 
         const items = ((ev.data as { items?: Citation[] }).items ?? []) as Citation[];
         setState((s) => ({ ...s, citations: items }));
       } else if (ev.event === "done") {
-        setState((s) => ({
-          ...s,
-          assistantText: "",
-          citations: [],
-          pendingUserMessage: null,
-          isStreaming: false,
-        }));
-        handlers.onDone(ev.data as { message_id: string; conversation_id: string });
+        const data = ev.data as { message_id: string; conversation_id: string };
+        setState((s) => ({ ...s, isStreaming: false, doneMessageId: data.message_id }));
+        handlers.onDone(data);
       } else if (ev.event === "error") {
         const message = (ev.data as { message?: string }).message ?? "Error";
         setState((s) => ({ ...s, isStreaming: false, error: message }));
@@ -78,6 +81,7 @@ export function useChatStream(conversationId: string, handlers: StreamHandlers) 
         citations: [],
         pendingUserMessage: content,
         isStreaming: true,
+        doneMessageId: null,
         error: null,
       });
       bufferRef.current = "";
@@ -106,11 +110,18 @@ export function useChatStream(conversationId: string, handlers: StreamHandlers) 
         applyEvents(parseSseLines(`${bufferRef.current}\n\n`));
         bufferRef.current = "";
       }
+      // Reader closed without an explicit `done` event — make sure we stop
+      // showing the streaming spinner.
+      setState((s) => (s.isStreaming ? { ...s, isStreaming: false } : s));
     },
     [conversationId, handlers],
   );
 
-  return { state, send } as const;
+  // Call this once the persisted assistant message is visible in the
+  // conversation; it tears down the transient streaming bubble.
+  const reset = useCallback(() => setState(INITIAL_STATE), []);
+
+  return { state, send, reset } as const;
 }
 
 export type ChatMessage = Message;

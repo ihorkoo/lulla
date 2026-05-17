@@ -49,4 +49,5 @@ ENV DJANGO_SETTINGS_MODULE=lulla.settings.production \
 EXPOSE 8000
 ENTRYPOINT ["/usr/bin/tini", "--", "/app/scripts/entrypoint.sh"]
 # Shell form so ${PORT} expands at runtime (Railway/Fly inject it dynamically).
-CMD ["sh", "-c", "exec uv run gunicorn lulla.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --access-logfile - --error-logfile -"]
+# gthread workers + long timeout so SSE streams don't get killed mid-response.
+CMD ["sh", "-c", "exec uv run gunicorn lulla.wsgi:application --bind 0.0.0.0:${PORT:-8000} --worker-class gthread --workers 2 --threads 8 --timeout 180 --graceful-timeout 30 --access-logfile - --error-logfile -"]

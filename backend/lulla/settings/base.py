@@ -187,7 +187,7 @@ SPECTACULAR_SETTINGS = {
 # Chat LLM: Gemma served via Google's Gemini API.
 GOOGLE_API_KEY = env("GOOGLE_API_KEY", "")
 GEMMA_MODEL = env("GEMMA_MODEL", "gemma-4-26b-a4b-it")  # alt: gemma-4-31b-it
-LLM_MAX_OUTPUT_TOKENS = int(env("LLM_MAX_OUTPUT_TOKENS", "1024"))
+LLM_MAX_OUTPUT_TOKENS = int(env("LLM_MAX_OUTPUT_TOKENS", "4096"))
 
 # Embedding provider abstraction: voyage | openai | gemini
 EMBEDDING_PROVIDER = env("EMBEDDING_PROVIDER", "gemini")

@@ -51,7 +51,7 @@ export function ChatWindow({ conversationId, initial }: Props) {
     enabled: Boolean(conversationId),
   });
 
-  const { state, send } = useChatStream(conversationId, {
+  const { state, send, reset } = useChatStream(conversationId, {
     onDone: () => {
       qc.invalidateQueries({ queryKey: ["conversation", conversationId] });
       qc.invalidateQueries({ queryKey: ["conversations"] });
@@ -61,6 +61,17 @@ export function ChatWindow({ conversationId, initial }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [state.assistantText, detail.data?.messages.length]);
+
+  // Once the persisted assistant message lands in the conversation, drop the
+  // transient streaming bubble. This avoids the brief blank window between
+  // `done` and the React Query refetch.
+  useEffect(() => {
+    if (!state.doneMessageId) return;
+    const persisted = detail.data?.messages.some(
+      (m) => m.id === state.doneMessageId,
+    );
+    if (persisted) reset();
+  }, [state.doneMessageId, detail.data?.messages, reset]);
 
   // Auto-grow textarea
   useEffect(() => {
@@ -78,6 +89,22 @@ export function ChatWindow({ conversationId, initial }: Props) {
 
   const messages = detail.data?.messages ?? [];
   const isEmpty = messages.length === 0 && !state.pendingUserMessage;
+  // While streaming or right after `done`, we may have the user message both
+  // in the streaming state and in the refetched conversation. De-dupe.
+  const lastPersistedUserContent = [...messages]
+    .reverse()
+    .find((m) => m.role === "user")?.content;
+  const showPendingUser =
+    state.pendingUserMessage !== null &&
+    state.pendingUserMessage !== lastPersistedUserContent;
+  // Likewise hide the streaming assistant bubble once its persisted twin shows
+  // up in `messages` — `reset()` will run on next effect tick.
+  const persistedAssistantPresent =
+    state.doneMessageId !== null &&
+    messages.some((m) => m.id === state.doneMessageId);
+  const showStreamingAssistant =
+    (state.assistantText.length > 0 || state.isStreaming) &&
+    !persistedAssistantPresent;
 
   return (
     <div className="flex h-full flex-col">
@@ -110,13 +137,13 @@ export function ChatWindow({ conversationId, initial }: Props) {
               {messages.map((m) => (
                 <MessageBubble key={m.id} role={m.role} content={m.content} />
               ))}
-              {state.pendingUserMessage ? (
+              {showPendingUser ? (
                 <MessageBubble
                   role="user"
-                  content={state.pendingUserMessage}
+                  content={state.pendingUserMessage!}
                 />
               ) : null}
-              {state.assistantText || state.isStreaming ? (
+              {showStreamingAssistant ? (
                 <MessageBubble
                   role="assistant"
                   content={state.assistantText}
